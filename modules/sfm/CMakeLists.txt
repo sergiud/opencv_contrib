@@ -6,44 +6,28 @@ set(the_description "SFM algorithms")
 
 find_package(Ceres QUIET)
 
-if(NOT Gflags_FOUND)  # Ceres find gflags on the own, so separate search isn't necessary
-  find_package(Gflags QUIET)
+if(NOT gflags_FOUND)  # Ceres find gflags on the own, so separate search isn't necessary
+  find_package(gflags 2.2.0 QUIET)
 endif()
-if(NOT Glog_FOUND)  # Ceres find glog on the own, so separate search isn't necessary
-  find_package(Glog QUIET)
-endif()
-
-if(NOT Gflags_FOUND OR NOT Glog_FOUND)
-  # try local search scripts
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-  if(NOT Gflags_FOUND)
-    find_package(Gflags QUIET)
-  endif()
-  if(NOT Glog_FOUND)
-    find_package(Glog QUIET)
-  endif()
+if(NOT glog_FOUND)  # Ceres find glog on the own, so separate search isn't necessary
+  find_package(glog 0.3.5 QUIET)
 endif()
 
-if(NOT DEFINED GFLAGS_INCLUDE_DIRS AND DEFINED GFLAGS_INCLUDE_DIR)
-  set(GFLAGS_INCLUDE_DIRS "${GFLAGS_INCLUDE_DIR}")
-endif()
-if(NOT GFLAGS_LIBRARIES AND TARGET gflags::gflags)
+if(TARGET gflags::gflags)
   set(GFLAGS_LIBRARIES gflags::gflags)
+elseif(TARGET gflags)
+  set(GFLAGS_LIBRARIES gflags)
 endif()
-if(NOT DEFINED GLOG_INCLUDE_DIRS AND DEFINED GLOG_INCLUDE_DIR)
-  set(GLOG_INCLUDE_DIRS "${GLOG_INCLUDE_DIR}")
-endif()
-if(NOT GLOG_LIBRARIES AND TARGET glog::glog)
+if(TARGET glog::glog)
   set(GLOG_LIBRARIES glog::glog)
 endif()
 
-if((gflags_FOUND OR Gflags_FOUND OR GFLAGS_FOUND OR GFLAGS_INCLUDE_DIRS) AND (glog_FOUND OR Glog_FOUND OR GLOG_FOUND OR GLOG_INCLUDE_DIRS))
-  set(__cache_key "${GLOG_INCLUDE_DIRS} ~ ${GFLAGS_INCLUDE_DIRS} ~ ${GLOG_LIBRARIES} ~ ${GFLAGS_LIBRARIES}")
+if(GLOG_LIBRARIES AND GFLAGS_LIBRARIES)
+  set(__cache_key "${GLOG_LIBRARIES} ~ ${GFLAGS_LIBRARIES}")
   if(NOT DEFINED SFM_GLOG_GFLAGS_TEST_CACHE_KEY OR NOT (SFM_GLOG_GFLAGS_TEST_CACHE_KEY STREQUAL __cache_key))
     set(__fname "${CMAKE_CURRENT_LIST_DIR}/cmake/checks/check_glog_gflags.cpp")
     try_compile(
         SFM_GLOG_GFLAGS_TEST "${CMAKE_BINARY_DIR}" "${__fname}"
-        CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${GLOG_INCLUDE_DIRS};${GFLAGS_INCLUDE_DIRS}"
         LINK_LIBRARIES ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES}
         OUTPUT_VARIABLE __output
     )
